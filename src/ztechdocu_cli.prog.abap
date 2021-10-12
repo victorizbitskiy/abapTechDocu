@@ -50,9 +50,9 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
   METHOD select_treqs.
 
     DATA lt_requests TYPE  trwbo_request_headers.
-    DATA cs_ranges TYPE trsel_ts_ranges.
+    DATA ls_ranges TYPE trsel_ts_ranges.
 
-    cs_ranges-trkorr = mt_treqs.
+    ls_ranges-trkorr = mt_treqs.
 
     CALL FUNCTION 'TRINT_SELECT_REQUESTS'
       EXPORTING
@@ -61,7 +61,7 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
       IMPORTING
         et_requests            = lt_requests
       CHANGING
-        cs_ranges              = cs_ranges
+        cs_ranges              = ls_ranges
       EXCEPTIONS
         action_aborted_by_user = 1
         OTHERS                 = 2.
@@ -70,8 +70,8 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
       DELETE ADJACENT DUPLICATES FROM lt_requests COMPARING trkorr.
     ENDIF.
 
-    LOOP AT lt_requests ASSIGNING FIELD-SYMBOL(<lfs_requests>).
-      APPEND VALUE #( sign = 'I' option = 'EQ' low = <lfs_requests>-trkorr ) TO rt_result.
+    LOOP AT lt_requests ASSIGNING FIELD-SYMBOL(<ls_requests>).
+      APPEND VALUE #( sign = 'I' option = 'EQ' low = <ls_requests>-trkorr ) TO rt_result.
     ENDLOOP.
 
   ENDMETHOD.
@@ -172,17 +172,12 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create_grid.
-    DATA: lo_container TYPE REF TO cl_gui_custom_container,
-          lt_fcat      TYPE lvc_t_fcat,
-          ls_layout    TYPE lvc_s_layo.
+    DATA lo_container TYPE REF TO cl_gui_custom_container.
+    DATA lt_fcat      TYPE lvc_t_fcat.
+    DATA ls_layout    TYPE lvc_s_layo.
 
-    CREATE OBJECT lo_container
-      EXPORTING
-        container_name = 'CONTAINER_9001'.
-
-    CREATE OBJECT mo_grid
-      EXPORTING
-        i_parent = lo_container.
+    lo_container = new #( container_name = 'CONTAINER_9001' ).
+    mo_grid = new #( i_parent = lo_container ).
 
     lt_fcat = get_field_catalog( ).
     ls_layout-sel_mode = 'A'.
@@ -212,16 +207,31 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
 
         CASE <ls_fcat>-fieldname.
           WHEN 'PGMID'.
-            <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l = <ls_fcat>-coltext = 'Program ID'(002).
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Program ID'(002).
           WHEN 'OBJ_TYPE'.
-            <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l = <ls_fcat>-coltext = 'Object type'(003).
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Object type'(003).
           WHEN 'OBJ_TYPE_NAME'.
-            <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l = <ls_fcat>-coltext = 'Object type name'(004).
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Object type name'(004).
           WHEN 'OBJ_NAME'.
-            <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l = <ls_fcat>-coltext = 'Object name'(005).
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Object name'(005).
           WHEN 'OBJ_TITLE'.
             <ls_fcat>-outputlen = 12.
-            <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l = <ls_fcat>-coltext = 'Object Title'(006).
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Object Title'(006).
           WHEN OTHERS.
         ENDCASE.
 
@@ -262,8 +272,8 @@ ENDCLASS.
 CLASS lcl_techdocu_treq_object_devc IMPLEMENTATION.
   METHOD lif_techdocu_treq_object~title.
 
-    SELECT SINGLE ctext FROM tdevct INTO rv_result WHERE devclass = mv_treq_object
-                                                     AND spras = mv_lang.
+    SELECT SINGLE ctext FROM tdevct INTO @rv_result WHERE devclass = @mv_treq_object
+                                                      AND spras = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
@@ -339,24 +349,24 @@ ENDCLASS.
 CLASS lcl_techdocu_treq_object_tabl IMPLEMENTATION.
   METHOD lif_techdocu_treq_object~title.
 
-    SELECT SINGLE ddtext FROM dd02v INTO rv_result WHERE tabname = mv_treq_object
-                                                     AND ddlanguage = mv_lang.
+    SELECT SINGLE ddtext FROM dd02v INTO @rv_result WHERE tabname = @mv_treq_object
+                                                      AND ddlanguage = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_techdocu_treq_object_msag IMPLEMENTATION.
   METHOD lif_techdocu_treq_object~title.
 
-    SELECT SINGLE stext FROM t100a INTO rv_result WHERE arbgb = mv_treq_object
-                                                    AND masterlang = mv_lang.
+    SELECT SINGLE stext FROM t100a INTO @rv_result WHERE arbgb = @mv_treq_object
+                                                     AND masterlang = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_techdocu_treq_object_shlp IMPLEMENTATION.
   METHOD lif_techdocu_treq_object~title.
 
-    SELECT SINGLE ddtext FROM dd30t INTO rv_result WHERE shlpname = mv_treq_object
-                                                     AND ddlanguage = mv_lang
-                                                     AND as4local = 'A'.
+    SELECT SINGLE ddtext FROM dd30t INTO @rv_result WHERE shlpname = @mv_treq_object
+                                                      AND ddlanguage = @mv_lang
+                                                      AND as4local = 'A'.
   ENDMETHOD.
 ENDCLASS.
