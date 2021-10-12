@@ -48,15 +48,15 @@ CLASS lcl_techdocu_alv DEFINITION.
   PUBLIC SECTION.
 
     TYPES:
-      gty_t_grid TYPE lcl_techdocu_treq_objects=>ty_t_treqs_data.
+      ty_t_grid TYPE lcl_techdocu_treq_objects=>ty_t_treqs_data.
 
     METHODS:
-      constructor IMPORTING it_grid TYPE gty_t_grid,
+      constructor IMPORTING it_grid TYPE ty_t_grid,
 
       display.
 
   PRIVATE SECTION.
-    DATA mt_grid TYPE gty_t_grid.
+    DATA mt_grid TYPE ty_t_grid.
     DATA mo_grid TYPE REF TO cl_gui_alv_grid.
 
     METHODS:

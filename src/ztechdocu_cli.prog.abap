@@ -176,8 +176,8 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
     DATA lt_fcat      TYPE lvc_t_fcat.
     DATA ls_layout    TYPE lvc_s_layo.
 
-    lo_container = new #( container_name = 'CONTAINER_9001' ).
-    mo_grid = new #( i_parent = lo_container ).
+    lo_container = NEW #( container_name = 'CONTAINER_9001' ).
+    mo_grid = NEW #( i_parent = lo_container ).
 
     lt_fcat = get_field_catalog( ).
     ls_layout-sel_mode = 'A'.
