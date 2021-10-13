@@ -19,7 +19,7 @@ A tool to help you create technical documentation
 A tool for creating technical documentation
 
 ## What is this for
-Often, when creating technical documentation for development, it is required to indicate objects created or modified in the system. Listing them as a manual chore, so I wanted to find a way to automate this.
+Often, when creating technical documentation, it is required to indicate objects created or modified in the system. Listing them as a manual chore, so I wanted to find a way to automate this.
 I found a tool to help create documentation about <a href="https://github.com/victorizbitskiy/CUSTTOOL"> settings</a>, but did not find a tool that automates the search for created development objects. So I created it myself.
 
 ## Installation
