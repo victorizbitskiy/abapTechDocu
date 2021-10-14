@@ -4,8 +4,9 @@
 <img src="https://github.com/victorizbitskiy/abapTechDocu/blob/main/logo/logo.png" height="100px"/>\
 <a href="https://www.flaticon.com/authors/itim2101">Designed by itim2101/Flaticon</a>
 
-**В процессе разработки...** 
-Translations:
+**В процессе разработки...**  
+
+Переводы:
 - [:ru: На английском языке](https://github.com/victorizbitskiy/abapTechDocu) 
 
 ## `abapTechDocu`
@@ -17,7 +18,7 @@ Translations:
 3. [Установка](#установка)
 4. [Использование](#использование)
 
-## Что этото такое?
+## Что это такое?
 Это классический отчет (report), который собирает и отображает информацию о созданных/измененных в процессе разработки объектах.
 
 ## Для чего это нужно?
