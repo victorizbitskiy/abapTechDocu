@@ -32,3 +32,5 @@ Just run the **`ztechdocu`** report and specify the transport requests.
 As a result, you will get a list of all existing objects from the request. Like this:
 
 ![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_1.png)
+
+Then you can, for example, upload this data to a file.
