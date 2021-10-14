@@ -5,6 +5,8 @@
 <a href="https://www.flaticon.com/authors/itim2101">Designed by itim2101/Flaticon</a>
 
 **В процессе разработки...** 
+Translations:
+- [:ru: На английском языке](https://github.com/victorizbitskiy/abapTechDocu) 
 
 ## `abapTechDocu`
 Инструмент, который поможет вам создать техническую документацию на разработку.
