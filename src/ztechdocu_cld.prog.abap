@@ -9,7 +9,7 @@ INTERFACE lif_techdocu_treq_objects.
 
 ENDINTERFACE.
 
-CLASS lcl_techdocu_treq_objects DEFINITION.
+CLASS lcl_techdocu_treq_objects DEFINITION FINAL.
   PUBLIC SECTION.
 
     INTERFACES lif_techdocu_treq_objects.
@@ -44,7 +44,7 @@ CLASS lcl_techdocu_treq_objects DEFINITION.
 
 ENDCLASS.
 
-CLASS lcl_techdocu_alv DEFINITION.
+CLASS lcl_techdocu_alv DEFINITION FINAL.
   PUBLIC SECTION.
 
     TYPES:
@@ -66,7 +66,7 @@ CLASS lcl_techdocu_alv DEFINITION.
 
 ENDCLASS.
 
-CLASS lcl_techdocu_scr_events DEFINITION.
+CLASS lcl_techdocu_scr_events DEFINITION FINAL.
   PUBLIC SECTION.
 
     CLASS-DATA: go_treq_objects TYPE REF TO lif_techdocu_treq_objects.
@@ -109,51 +109,77 @@ CLASS lcl_techdocu_treq_object DEFINITION ABSTRACT.
 
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_devc DEFINITION INHERITING FROM lcl_techdocu_treq_object.
+CLASS lcl_techdocu_treq_object_devc DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
   PUBLIC SECTION.
-
     METHODS lif_techdocu_treq_object~title REDEFINITION.
-
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_prog DEFINITION INHERITING FROM lcl_techdocu_treq_object.
+CLASS lcl_techdocu_treq_object_prog DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
   PUBLIC SECTION.
-
     METHODS lif_techdocu_treq_object~title REDEFINITION.
-
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_intf DEFINITION INHERITING FROM lcl_techdocu_treq_object.
+CLASS lcl_techdocu_treq_object_intf DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
   PUBLIC SECTION.
-
     METHODS lif_techdocu_treq_object~title REDEFINITION.
-
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_clas DEFINITION INHERITING FROM lcl_techdocu_treq_object.
+CLASS lcl_techdocu_treq_object_clas DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
   PUBLIC SECTION.
-
     METHODS lif_techdocu_treq_object~title REDEFINITION.
-
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_tabl DEFINITION INHERITING FROM lcl_techdocu_treq_object.
+CLASS lcl_techdocu_treq_object_tabl DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
   PUBLIC SECTION.
-
     METHODS lif_techdocu_treq_object~title REDEFINITION.
-
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_msag DEFINITION INHERITING FROM lcl_techdocu_treq_object.
+CLASS lcl_techdocu_treq_object_msag DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
   PUBLIC SECTION.
-
     METHODS lif_techdocu_treq_object~title REDEFINITION.
-
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_shlp DEFINITION INHERITING FROM lcl_techdocu_treq_object.
+CLASS lcl_techdocu_treq_object_shlp DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
   PUBLIC SECTION.
-
     METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
 
+CLASS lcl_techdocu_treq_object_doma DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_dtel DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_ttyp DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_view DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_sfpi DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_sfpf DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_fugr DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_sxci DEFINITION INHERITING FROM lcl_techdocu_treq_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_treq_object~title REDEFINITION.
 ENDCLASS.

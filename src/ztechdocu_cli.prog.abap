@@ -88,8 +88,7 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
       FROM e071
       INTO CORRESPONDING FIELDS OF TABLE @lt_treqs_data
       WHERE trkorr IN @it_treqs
-        AND pgmid = 'R3TR'
-      ORDER BY obj_type.
+        AND pgmid = 'R3TR'.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
@@ -106,6 +105,8 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+    SORT mt_treqs_data ASCENDING.
 
   ENDMETHOD.
 
@@ -314,7 +315,7 @@ CLASS lcl_techdocu_treq_object_intf IMPLEMENTATION.
         model_only   = 3
         OTHERS       = 4.
     IF sy-subrc = 0.
-      rv_result = ls_vseointerf-clsname.
+      rv_result = ls_vseointerf-descript.
     ENDIF.
 
   ENDMETHOD.
@@ -340,7 +341,7 @@ CLASS lcl_techdocu_treq_object_clas IMPLEMENTATION.
         model_only   = 3
         OTHERS       = 4.
     IF sy-subrc = 0.
-      rv_result = ls_vseoclass-clsname.
+      rv_result = ls_vseoclass-descript.
     ENDIF.
 
   ENDMETHOD.
@@ -368,5 +369,78 @@ CLASS lcl_techdocu_treq_object_shlp IMPLEMENTATION.
     SELECT SINGLE ddtext FROM dd30t INTO @rv_result WHERE shlpname = @mv_treq_object
                                                       AND ddlanguage = @mv_lang
                                                       AND as4local = 'A'.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_doma IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE ddtext FROM dd01t INTO @rv_result WHERE domname = @mv_treq_object
+                                                      AND ddlanguage = @mv_lang
+                                                      AND as4local = 'A'
+                                                      AND as4vers = @space.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_dtel IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE ddtext FROM dd04t INTO @rv_result WHERE rollname = @mv_treq_object
+                                                      AND ddlanguage = @mv_lang
+                                                      AND as4local = 'A'
+                                                      AND as4vers = @space.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_ttyp IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE ddtext FROM dd40t INTO @rv_result WHERE typename = @mv_treq_object
+                                                      AND ddlanguage = @mv_lang
+                                                      AND as4local = 'A'.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_view IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE ddtext FROM dd25t INTO @rv_result WHERE ddlanguage = @mv_lang
+                                                      AND viewname = @mv_treq_object
+                                                      AND as4local = 'A'
+                                                      AND as4vers = @space.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_sfpi IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE text INTO @rv_result FROM fpinterfacet WHERE name = @mv_treq_object
+                                                           AND state = 'A'
+                                                           AND language = @mv_lang.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_sfpf IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE text INTO @rv_result FROM fpcontextt WHERE name = @mv_treq_object
+                                                         AND state = 'A'
+                                                         AND language = @mv_lang.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_fugr IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE areat INTO @rv_result FROM tlibt WHERE spras = @mv_lang
+                                                     AND area = @mv_treq_object.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_treq_object_sxci IMPLEMENTATION.
+  METHOD lif_techdocu_treq_object~title.
+
+    SELECT SINGLE text INTO @rv_result FROM sxc_attrt WHERE imp_name = @mv_treq_object
+                                                        AND sprsl = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
