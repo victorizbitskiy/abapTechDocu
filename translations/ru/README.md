@@ -17,6 +17,7 @@
 2. [Для чего это нужно?](#для-чего-это-нужно)
 3. [Установка](#установка)
 4. [Использование](#использование)
+5. [Поддерживаемые типы объектов](#)
 
 ## Что это такое?
 Это классический отчет (report), который собирает и отображает информацию о созданных/измененных в процессе разработки объектах.
@@ -36,3 +37,23 @@
 ![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_1.png)
 
 Далее можно, например, выгрузить эти данные в файл.
+
+## Поддерживаемые типы объектов
+| Тип объекта | Название типа объекта        |
+| :-----| :----------------------------------|
+|  CLAS | Class (ABAP Objects)               |
+|  DEVC | Package                            |
+|  DOMA | Domain                             |
+|  DTEL | Data Element                       |
+|  FUGR | Function Group                     |
+|  INTF | Interface (ABAP Objects)           |
+|  MSAG | Message Class                      |
+|  PROG | Program                            |
+|  SFPF | Form Object: Interface             |
+|  SFPI | Form Object: Form                  |
+|  SHLP | Search Help                        |
+|  SXCI | Business Add-Ins - Implementations |
+|  TABL | Table                              |
+|  TTYP | Table Type                         |
+|  VIEW | View                               |
+
