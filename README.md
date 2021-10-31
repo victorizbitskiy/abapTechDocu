@@ -17,6 +17,7 @@ A tool to help you create technical documentation
 2. [What is this for?](#what-is-this-for)
 3. [Installation](#installation)
 4. [Usage](#usage)
+5. [Supported Object Type](supported-object-type)
 
 ## What it is?
 A tool for creating technical documentation
@@ -34,3 +35,23 @@ As a result, you will get a list of all existing objects from the request. Like 
 ![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_1.png)
 
 Then you can, for example, upload this data to a file.
+
+## Supported Object Type
+| Тип объекта | Название типа объекта        |
+| :-----| :----------------------------------|
+|  CLAS | Class (ABAP Objects)               |
+|  DEVC | Package                            |
+|  DOMA | Domain                             |
+|  DTEL | Data Element                       |
+|  FUGR | Function Group                     |
+|  INTF | Interface (ABAP Objects)           |
+|  MSAG | Message Class                      |
+|  PROG | Program                            |
+|  SFPF | Form Object: Interface             |
+|  SFPI | Form Object: Form                  |
+|  SHLP | Search Help                        |
+|  SXCI | Business Add-Ins - Implementations |
+|  TABL | Table                              |
+|  TTYP | Table Type                         |
+|  VIEW | View                               |
+
