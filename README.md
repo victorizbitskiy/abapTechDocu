@@ -40,7 +40,9 @@ As a result, you will get a list of all relevant objects. Like this:
 Then you can, for example, upload this data to a file.
 
 ## Supported Object Type
-| Тип объекта | Название типа объекта        |
+Currently, the output of the object title is supported only for the following objects.
+
+| Object type | Object type name             |
 | :-----| :----------------------------------|
 |  CLAS | Class (ABAP Objects)               |
 |  DEVC | Package                            |
