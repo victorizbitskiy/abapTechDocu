@@ -59,6 +59,7 @@
 |  SHLP | Search Help                        |
 |  SXCI | Business Add-Ins - Implementations |
 |  TABL | Table                              |
+|  TRAN | Transaction                        |
 |  TTYP | Table Type                         |
 |  VIEW | View                               |
 
