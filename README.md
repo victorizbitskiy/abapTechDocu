@@ -57,6 +57,7 @@ Currently, the output of the object title is supported only for the following ob
 |  SHLP | Search Help                        |
 |  SXCI | Business Add-Ins - Implementations |
 |  TABL | Table                              |
+|  TRAN | Transaction                        |
 |  TTYP | Table Type                         |
 |  VIEW | View                               |
 
