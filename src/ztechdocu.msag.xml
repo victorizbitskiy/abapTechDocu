@@ -11,8 +11,14 @@
     <T100>
      <SPRSL>E</SPRSL>
      <ARBGB>ZTECHDOCU</ARBGB>
-     <MSGNR>000</MSGNR>
-     <TEXT>Transport request not found</TEXT>
+     <MSGNR>001</MSGNR>
+     <TEXT>Please specify a selection parameter</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZTECHDOCU</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>Оbject type R3TR &amp;1 is not yet supported</TEXT>
     </T100>
    </T100>
   </asx:values>

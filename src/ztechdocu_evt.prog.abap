@@ -4,6 +4,9 @@
 INITIALIZATION.
   lcl_techdocu_scr_events=>initialization( ).
 
+AT SELECTION-SCREEN.
+  lcl_techdocu_scr_events=>at_selection_screen( ).
+
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_treqs-low.
   lcl_techdocu_scr_events=>at_ssonvrf_treqs( ).
 

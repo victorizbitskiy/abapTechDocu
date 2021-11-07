@@ -3,12 +3,20 @@
 *&---------------------------------------------------------------------*
 CLASS lcl_techdocu_scr_events IMPLEMENTATION.
   METHOD initialization.
-    p_lang = 'EN'.
+    p_lang = sy-langu.
+  ENDMETHOD.
+
+  METHOD at_selection_screen.
+
+    IF s_treqs IS INITIAL AND s_devc[] IS INITIAL.
+      MESSAGE e001.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD at_ssonvrf_treqs.
 
-    DATA ls_selection        TYPE trwbo_selection.
+    DATA ls_selection TYPE trwbo_selection.
     DATA ls_selected_request TYPE trwbo_request_header.
 
     CALL FUNCTION 'TR_PRESENT_REQUESTS_SEL_POPUP'
@@ -25,34 +33,38 @@ CLASS lcl_techdocu_scr_events IMPLEMENTATION.
 
   METHOD start_of_selection.
 
-    go_treq_objects = NEW lcl_techdocu_treq_objects( it_treqs = s_treqs[]
-                                                     iv_lang = p_lang ).
-    go_treq_objects->read( ).
+    go_repo = NEW lcl_techdocu_repo( VALUE #( treq_range = s_treqs[]
+                                              devc_range = s_devc[]
+                                              lang = p_lang ) ).
+    go_repo->read( ).
 
   ENDMETHOD.
 
   METHOD end_of_selection.
 
-    go_treq_objects->display( ).
+    go_repo->display( ).
 
   ENDMETHOD.
 
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
+CLASS lcl_techdocu_repo IMPLEMENTATION.
   METHOD constructor.
 
-    mt_treqs = it_treqs.
-    mv_lang = iv_lang.
+    ms_context = is_context.
 
   ENDMETHOD.
 
   METHOD select_treqs.
 
-    DATA lt_requests TYPE  trwbo_request_headers.
+    DATA lt_requests TYPE trwbo_request_headers.
     DATA ls_ranges TYPE trsel_ts_ranges.
 
-    ls_ranges-trkorr = mt_treqs.
+    IF ms_context-treq_range IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ls_ranges-trkorr = ms_context-treq_range.
 
     CALL FUNCTION 'TRINT_SELECT_REQUESTS'
       EXPORTING
@@ -76,37 +88,82 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD read_treqs_data.
+  METHOD read_repo_data.
 
-    DATA lt_treqs_data TYPE ty_t_treqs_data.
+    DATA lt_repo_data TYPE ty_t_repo_data.
     DATA lt_object_table TYPE STANDARD TABLE OF ko100.
-
-    SELECT DISTINCT
-      object AS obj_type,
-      pgmid,
-      obj_name
-      FROM e071
-      INTO CORRESPONDING FIELDS OF TABLE @lt_treqs_data
-      WHERE trkorr IN @it_treqs
-        AND pgmid = 'R3TR'.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
         wt_object_text = lt_object_table.
 
-    LOOP AT lt_treqs_data INTO DATA(ls_treqs_data).
+    APPEND LINES OF read_e071( ) TO lt_repo_data.
+    APPEND LINES OF read_tadir( ) TO lt_repo_data.
 
-      IF is_treq_exist( ls_treqs_data ).
-        ls_treqs_data-obj_type_name = lt_object_table[ object = ls_treqs_data-obj_type ]-text.
+    SORT lt_repo_data ASCENDING.
 
-        ls_treqs_data-obj_title = read_treq_object_title( iv_treq_object      = ls_treqs_data-obj_name
-                                                          iv_treq_object_type = ls_treqs_data-obj_type ).
-        APPEND ls_treqs_data TO mt_treqs_data.
+    LOOP AT lt_repo_data INTO DATA(ls_repo_data).
+
+      IF is_treq_exist( ls_repo_data ).
+        ls_repo_data-obj_type_name = lt_object_table[ object = ls_repo_data-obj_type ]-text.
+
+        TRY.
+            ls_repo_data-obj_title = read_repo_object_title( iv_object = ls_repo_data-obj_name
+                                                             iv_object_type = ls_repo_data-obj_type ).
+
+          CATCH cx_sy_create_object_error INTO DATA(lo_e).
+
+            ls_repo_data-rowcolor = 'C311'.
+            ls_repo_data-message_type = 'W'.
+            MESSAGE w002 WITH ls_repo_data-obj_type INTO ls_repo_data-message_text.
+
+        ENDTRY.
+
+        IF ls_repo_data-message_type IS INITIAL.
+          APPEND ls_repo_data TO mt_repo_data.
+        ELSE.
+          INSERT ls_repo_data INTO mt_repo_data INDEX 1.
+        ENDIF.
+
       ENDIF.
 
     ENDLOOP.
 
-    SORT mt_treqs_data ASCENDING.
+  ENDMETHOD.
+
+  METHOD read_e071.
+
+    DATA(lt_treqs) = select_treqs( ).
+
+    IF lt_treqs IS NOT INITIAL.
+
+      SELECT DISTINCT
+        pgmid,
+        object AS obj_type,
+        obj_name
+        FROM e071
+        INTO CORRESPONDING FIELDS OF TABLE @rt_result
+        WHERE trkorr IN @lt_treqs
+          AND pgmid = 'R3TR'.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD read_tadir.
+
+    IF ms_context-devc_range IS NOT INITIAL.
+
+      SELECT
+        pgmid,
+        object AS obj_type,
+        obj_name
+        FROM tadir
+        APPENDING CORRESPONDING FIELDS OF TABLE @rt_result
+        WHERE devclass IN @ms_context-devc_range
+          AND pgmid = 'R3TR'.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -116,9 +173,9 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
 
     CALL FUNCTION 'TR_CHECK_EXIST'
       EXPORTING
-        iv_pgmid             = is_treqs_data-pgmid
-        iv_object            = is_treqs_data-obj_type
-        iv_obj_name          = is_treqs_data-obj_name
+        iv_pgmid             = is_repo_data-pgmid
+        iv_object            = is_repo_data-obj_type
+        iv_obj_name          = is_repo_data-obj_name
       IMPORTING
         e_exist              = lv_exist
       EXCEPTIONS
@@ -130,49 +187,42 @@ CLASS lcl_techdocu_treq_objects IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD read_treq_object_title.
+  METHOD read_repo_object_title.
 
-    TRY.
-        DATA(lo_treq_object) =
-          lcl_techdocu_treq_object=>get_instance( iv_treq_object      = iv_treq_object
-                                                  iv_treq_object_type = iv_treq_object_type
-                                                  iv_lang             = mv_lang ).
-        rv_result = lo_treq_object->title( ).
-      CATCH cx_sy_create_object_error INTO DATA(lo_e).
-        "TODO Raise Exception
-        MESSAGE lo_e->get_text( ) TYPE 'S' DISPLAY LIKE 'W'.
-    ENDTRY.
+    DATA(lo_object) = lcl_techdocu_repo_object=>get_instance( iv_object = iv_object
+                                                              iv_object_type = iv_object_type
+                                                              iv_lang = ms_context-lang ).
+    rv_result = lo_object->title( ).
 
   ENDMETHOD.
 
-  METHOD lif_techdocu_treq_objects~read.
+  METHOD lif_techdocu_repo~read.
 
-    DATA(lt_treqs) = select_treqs( ).
-    read_treqs_data( lt_treqs ).
+    read_repo_data( ).
     ro_result = me.
 
   ENDMETHOD.
 
-  METHOD lif_techdocu_treq_objects~display.
+  METHOD lif_techdocu_repo~display.
 
-    DATA(lo_alv) = NEW lcl_techdocu_alv( mt_treqs_data ).
-    lo_alv->display( ).
+    DATA(lo_alv) = NEW lcl_techdocu_alv( ).
+    lo_alv->display( CHANGING ct_outtab = mt_repo_data ).
 
   ENDMETHOD.
 
 ENDCLASS.
 
 CLASS lcl_techdocu_alv IMPLEMENTATION.
-  METHOD constructor.
-    mt_grid = it_grid.
-  ENDMETHOD.
 
   METHOD display.
-    create_grid( ).
+
+    create_grid( CHANGING ct_outtab = ct_outtab ).
     CALL SCREEN 9001.
+
   ENDMETHOD.
 
   METHOD create_grid.
+
     DATA lo_container TYPE REF TO cl_gui_custom_container.
     DATA lt_fcat      TYPE lvc_t_fcat.
     DATA ls_layout    TYPE lvc_s_layo.
@@ -184,15 +234,16 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
     ls_layout-sel_mode = 'A'.
     ls_layout-zebra = abap_true.
     ls_layout-cwidth_opt = abap_true.
+    ls_layout-info_fname = 'ROWCOLOR'.
 
     mo_grid->set_table_for_first_display( EXPORTING is_layout       = ls_layout
                                            CHANGING it_fieldcatalog = lt_fcat
-                                                    it_outtab       = mt_grid ).
+                                                    it_outtab       = ct_outtab ).
   ENDMETHOD.
 
   METHOD get_field_catalog.
 
-    FIELD-SYMBOLS: <ls_fcat> LIKE LINE OF rt_fcat.
+    FIELD-SYMBOLS <ls_fcat> LIKE LINE OF rt_fcat.
 
     CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
       EXPORTING
@@ -232,7 +283,19 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
-            <ls_fcat>-coltext = 'Object Title'(006).
+            <ls_fcat>-coltext = 'Object title'(006).
+          WHEN 'MESSAGE_TYPE'.
+            <ls_fcat>-outputlen = 12.
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Message type'(007).
+          WHEN 'MESSAGE_TEXT'.
+            <ls_fcat>-outputlen = 20.
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Message text'(008).
           WHEN OTHERS.
         ENDCASE.
 
@@ -242,50 +305,50 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object IMPLEMENTATION.
+CLASS lcl_techdocu_repo_object IMPLEMENTATION.
   METHOD constructor.
 
-    mv_treq_object = iv_treq_object.
-    mv_treq_object_type = iv_treq_object_type.
+    mv_object = iv_object.
+    mv_object_type = iv_object_type.
     mv_lang = iv_lang.
 
   ENDMETHOD.
 
   METHOD get_instance.
 
-    DATA(lv_type) = |LCL_TECHDOCU_TREQ_OBJECT_{ iv_treq_object_type }|.
+    DATA(lv_type) = |LCL_TECHDOCU_REPO_OBJECT_{ iv_object_type }|.
 
     CREATE OBJECT ro_result
       TYPE (lv_type)
       EXPORTING
-        iv_treq_object = iv_treq_object
-        iv_treq_object_type = iv_treq_object_type
+        iv_object = iv_object
+        iv_object_type = iv_object_type
         iv_lang = iv_lang.
 
   ENDMETHOD.
 
-  METHOD lif_techdocu_treq_object~title.
+  METHOD lif_techdocu_repo_object~title.
     rv_result = space.
   ENDMETHOD.
 
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_devc IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_devc IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE ctext FROM tdevct INTO @rv_result WHERE devclass = @mv_treq_object
+    SELECT SINGLE ctext FROM tdevct INTO @rv_result WHERE devclass = @mv_object
                                                       AND spras = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_prog IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_prog IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
     DATA lv_result TYPE rs38m-repti.
 
     CALL FUNCTION 'PROGRAM_TITLE'
       EXPORTING
-        program  = CONV sy-repid( mv_treq_object )
+        program  = CONV sy-repid( mv_object )
         language = mv_lang
       IMPORTING
         title    = lv_result.
@@ -295,13 +358,13 @@ CLASS lcl_techdocu_treq_object_prog IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_intf IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_intf IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
     DATA ls_clskey TYPE seoclskey.
     DATA ls_vseointerf TYPE vseointerf.
 
-    ls_clskey-clsname = mv_treq_object.
+    ls_clskey-clsname = mv_object.
 
     CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
@@ -321,13 +384,13 @@ CLASS lcl_techdocu_treq_object_intf IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_clas IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_clas IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
     DATA ls_clskey TYPE seoclskey.
     DATA ls_vseoclass TYPE vseoclass.
 
-    ls_clskey-clsname = mv_treq_object.
+    ls_clskey-clsname = mv_object.
 
     CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
@@ -347,100 +410,100 @@ CLASS lcl_techdocu_treq_object_clas IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_tabl IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_tabl IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE ddtext FROM dd02v INTO @rv_result WHERE tabname = @mv_treq_object
+    SELECT SINGLE ddtext FROM dd02v INTO @rv_result WHERE tabname = @mv_object
                                                       AND ddlanguage = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_msag IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_msag IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE stext FROM t100a INTO @rv_result WHERE arbgb = @mv_treq_object
+    SELECT SINGLE stext FROM t100a INTO @rv_result WHERE arbgb = @mv_object
                                                      AND masterlang = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_shlp IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_shlp IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE ddtext FROM dd30t INTO @rv_result WHERE shlpname = @mv_treq_object
+    SELECT SINGLE ddtext FROM dd30t INTO @rv_result WHERE shlpname = @mv_object
                                                       AND ddlanguage = @mv_lang
                                                       AND as4local = 'A'.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_doma IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_doma IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE ddtext FROM dd01t INTO @rv_result WHERE domname = @mv_treq_object
+    SELECT SINGLE ddtext FROM dd01t INTO @rv_result WHERE domname = @mv_object
                                                       AND ddlanguage = @mv_lang
                                                       AND as4local = 'A'
                                                       AND as4vers = @space.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_dtel IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_dtel IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE ddtext FROM dd04t INTO @rv_result WHERE rollname = @mv_treq_object
+    SELECT SINGLE ddtext FROM dd04t INTO @rv_result WHERE rollname = @mv_object
                                                       AND ddlanguage = @mv_lang
                                                       AND as4local = 'A'
                                                       AND as4vers = @space.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_ttyp IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_ttyp IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE ddtext FROM dd40t INTO @rv_result WHERE typename = @mv_treq_object
+    SELECT SINGLE ddtext FROM dd40t INTO @rv_result WHERE typename = @mv_object
                                                       AND ddlanguage = @mv_lang
                                                       AND as4local = 'A'.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_view IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_view IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
     SELECT SINGLE ddtext FROM dd25t INTO @rv_result WHERE ddlanguage = @mv_lang
-                                                      AND viewname = @mv_treq_object
+                                                      AND viewname = @mv_object
                                                       AND as4local = 'A'
                                                       AND as4vers = @space.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_sfpi IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_sfpi IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE text INTO @rv_result FROM fpinterfacet WHERE name = @mv_treq_object
+    SELECT SINGLE text INTO @rv_result FROM fpinterfacet WHERE name = @mv_object
                                                            AND state = 'A'
                                                            AND language = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_sfpf IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_sfpf IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE text INTO @rv_result FROM fpcontextt WHERE name = @mv_treq_object
+    SELECT SINGLE text INTO @rv_result FROM fpcontextt WHERE name = @mv_object
                                                          AND state = 'A'
                                                          AND language = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_fugr IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_fugr IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
     SELECT SINGLE areat INTO @rv_result FROM tlibt WHERE spras = @mv_lang
-                                                     AND area = @mv_treq_object.
+                                                     AND area = @mv_object.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_treq_object_sxci IMPLEMENTATION.
-  METHOD lif_techdocu_treq_object~title.
+CLASS lcl_techdocu_repo_object_sxci IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
 
-    SELECT SINGLE text INTO @rv_result FROM sxc_attrt WHERE imp_name = @mv_treq_object
+    SELECT SINGLE text INTO @rv_result FROM sxc_attrt WHERE imp_name = @mv_object
                                                         AND sprsl = @mv_lang.
   ENDMETHOD.
 ENDCLASS.
