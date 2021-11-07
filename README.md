@@ -29,7 +29,10 @@ Often, when creating technical documentation, it is required to indicate objects
 Installation is done with [abapGit](http://www.abapgit.org).
 
 ## Usage
-Just run the **`ztechdocu`** report and specify the transport requests.
+Just run the **`ztechdocu`** report and specify the transport requests or packages.
+
+![screen](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/sel_scr.png)
+
 As a result, you will get a list of all existing objects from the request. Like this:
 
 ![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_1.png)
