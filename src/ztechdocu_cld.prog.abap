@@ -128,6 +128,11 @@ CLASS lcl_techdocu_repo_object_prog DEFINITION INHERITING FROM lcl_techdocu_repo
     METHODS lif_techdocu_repo_object~title REDEFINITION.
 ENDCLASS.
 
+CLASS lcl_techdocu_repo_object_tran DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+  PUBLIC SECTION.
+    METHODS lif_techdocu_repo_object~title REDEFINITION.
+ENDCLASS.
+
 CLASS lcl_techdocu_repo_object_intf DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
   PUBLIC SECTION.
     METHODS lif_techdocu_repo_object~title REDEFINITION.

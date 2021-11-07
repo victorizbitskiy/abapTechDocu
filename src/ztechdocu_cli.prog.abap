@@ -358,6 +358,15 @@ CLASS lcl_techdocu_repo_object_prog IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcl_techdocu_repo_object_tran IMPLEMENTATION.
+  METHOD lif_techdocu_repo_object~title.
+
+    SELECT SINGLE ttext FROM tstct INTO @rv_result WHERE tcode = @mv_object
+                                                     AND sprsl = @mv_lang.
+
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_techdocu_repo_object_intf IMPLEMENTATION.
   METHOD lif_techdocu_repo_object~title.
 
