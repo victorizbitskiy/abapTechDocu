@@ -33,7 +33,7 @@ Just run the **`ztechdocu`** report and specify the transport requests or packag
 
 ![screen](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/sel_scr.png)
 
-As a result, you will get a list of all existing objects from the request. Like this:
+As a result, you will get a list of all relevant objects. Like this:
 
 ![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_1.png)
 
