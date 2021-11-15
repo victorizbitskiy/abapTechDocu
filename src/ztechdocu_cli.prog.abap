@@ -107,7 +107,15 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
             DATA(ls_attributes) = read_repo_obj_metadata( iv_object = ls_repo_data-obj_name
                                                           iv_object_type = ls_repo_data-obj_type )->get_attributes( ).
 
-            ls_repo_data-obj_title = ls_attributes-title.
+            ls_repo_data-pgmid         = ls_repo_data-pgmid.
+            ls_repo_data-obj_type      = ls_repo_data-obj_type.
+            ls_repo_data-obj_type_name = ls_repo_data-obj_type_name.
+            ls_repo_data-obj_name      = ls_repo_data-obj_name.
+            ls_repo_data-obj_title     = ls_attributes-title.
+            ls_repo_data-cnam          = ls_attributes-cnam.
+            ls_repo_data-cdat          = ls_attributes-cdat.
+            ls_repo_data-uname         = ls_attributes-unam.
+            ls_repo_data-udat          = ls_attributes-udat.
 
           CATCH cx_sy_create_object_error INTO DATA(lo_e).
 
@@ -294,6 +302,8 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Message text'(008).
+          WHEN 'CNAM' OR 'CDAT' OR 'UNAME' OR 'UDAT'.
+            <ls_fcat>-tech = abap_true.
           WHEN OTHERS.
         ENDCASE.
 
@@ -324,7 +334,7 @@ CLASS lcl_techdocu_repo_obj IMPLEMENTATION.
 
   METHOD get_instance.
 
-    DATA(lv_class_name) = |LCL_TECHDOCU_REPO_OBJECT_{ iv_object_type }|.
+    DATA(lv_class_name) = |LCL_TECHDOCU_REPO_OBJ_{ iv_object_type }|.
 
     CREATE OBJECT ro_result
       TYPE (lv_class_name)
@@ -354,6 +364,7 @@ CLASS lcl_techdocu_repo_obj_devc IMPLEMENTATION.
 
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -375,6 +386,7 @@ CLASS lcl_techdocu_repo_obj_prog IMPLEMENTATION.
 
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -388,6 +400,7 @@ CLASS lcl_techdocu_repo_obj_tran IMPLEMENTATION.
                                                                AND sprsl = @mv_lang.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -418,6 +431,7 @@ CLASS lcl_techdocu_repo_obj_intf IMPLEMENTATION.
 
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -448,6 +462,7 @@ CLASS lcl_techdocu_repo_obj_clas IMPLEMENTATION.
 
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -462,6 +477,7 @@ CLASS lcl_techdocu_repo_obj_tabl IMPLEMENTATION.
 
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -476,6 +492,7 @@ CLASS lcl_techdocu_repo_obj_msag IMPLEMENTATION.
 
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -490,6 +507,7 @@ CLASS lcl_techdocu_repo_obj_shlp IMPLEMENTATION.
                                                                 AND as4local = 'A'.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -505,6 +523,7 @@ CLASS lcl_techdocu_repo_obj_doma IMPLEMENTATION.
                                                                 AND as4vers = @space.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -520,6 +539,7 @@ CLASS lcl_techdocu_repo_obj_dtel IMPLEMENTATION.
                                                                 AND as4vers = @space.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -534,6 +554,7 @@ CLASS lcl_techdocu_repo_obj_ttyp IMPLEMENTATION.
                                                                 AND as4local = 'A'.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -549,6 +570,7 @@ CLASS lcl_techdocu_repo_obj_view IMPLEMENTATION.
                                                                 AND as4vers = @space.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -563,6 +585,7 @@ CLASS lcl_techdocu_repo_obj_sfpi IMPLEMENTATION.
                                                                      AND language = @mv_lang.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -577,6 +600,7 @@ CLASS lcl_techdocu_repo_obj_sfpf IMPLEMENTATION.
                                                                    AND language = @mv_lang.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -590,6 +614,7 @@ CLASS lcl_techdocu_repo_obj_fugr IMPLEMENTATION.
                                                                AND area = @mv_object.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -603,6 +628,7 @@ CLASS lcl_techdocu_repo_obj_sxci IMPLEMENTATION.
                                                                   AND sprsl = @mv_lang.
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
