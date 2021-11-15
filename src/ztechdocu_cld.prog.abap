@@ -9,6 +9,27 @@ INTERFACE lif_techdocu_repo.
 
 ENDINTERFACE.
 
+CLASS lcl_techdocu_repo_obj_metadata DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    TYPES:
+      BEGIN OF ty_attributes,
+        title TYPE string,
+        cnam  TYPE string,
+        cdat  TYPE d,
+        unam  TYPE string,
+        udat  TYPE d,
+      END OF ty_attributes.
+
+    METHODS:
+      set_attributes IMPORTING is_attributes TYPE ty_attributes,
+      get_attributes RETURNING VALUE(rs_result) TYPE ty_attributes.
+
+  PRIVATE SECTION.
+    DATA ms_attributes TYPE ty_attributes.
+
+ENDCLASS.
+
 CLASS lcl_techdocu_repo DEFINITION FINAL.
   PUBLIC SECTION.
 
@@ -41,17 +62,17 @@ CLASS lcl_techdocu_repo DEFINITION FINAL.
 
       read_repo_data,
 
-      read_e071 RETURNING VALUE(rt_result) TYPE ty_t_repo_data,
+      repo_data_by_treqs RETURNING VALUE(rt_result) TYPE ty_t_repo_data,
 
-      read_tadir RETURNING VALUE(rt_result) TYPE ty_t_repo_data,
+      repo_data_by_package RETURNING VALUE(rt_result) TYPE ty_t_repo_data,
 
-      is_treq_exist IMPORTING is_repo_data TYPE ty_repo_data
+      is_treq_exist IMPORTING is_repo_data     TYPE ty_repo_data
                     RETURNING VALUE(rv_result) TYPE boole_d,
 
-      read_repo_object_title IMPORTING iv_object TYPE trobj_name
-                                       iv_object_type TYPE trobjtype
-                             RETURNING VALUE(rv_result) TYPE string
-                             RAISING cx_sy_create_object_error.
+      read_repo_obj_metadata IMPORTING iv_object        TYPE trobj_name
+                                       iv_object_type   TYPE trobjtype
+                             RETURNING VALUE(ro_result) TYPE REF TO lcl_techdocu_repo_obj_metadata
+                             RAISING   cx_sy_create_object_error.
 
 ENDCLASS.
 
@@ -90,110 +111,113 @@ CLASS lcl_techdocu_scr_events DEFINITION FINAL.
 
 ENDCLASS.
 
-INTERFACE lif_techdocu_repo_object.
-  METHODS title RETURNING VALUE(rv_result) TYPE string
-                RAISING cx_sy_create_object_error.
+INTERFACE lif_techdocu_repo_obj.
+  METHODS:
+    read_metadata RETURNING VALUE(ro_result) TYPE REF TO lif_techdocu_repo_obj,
+
+    get_metadata RETURNING VALUE(ro_result) TYPE REF TO lcl_techdocu_repo_obj_metadata
+                 RAISING   cx_sy_create_object_error.
 ENDINTERFACE.
 
-CLASS lcl_techdocu_repo_object DEFINITION ABSTRACT.
+CLASS lcl_techdocu_repo_obj DEFINITION ABSTRACT.
   PUBLIC SECTION.
-    INTERFACES lif_techdocu_repo_object.
+    INTERFACES lif_techdocu_repo_obj.
 
-    CLASS-METHODS
-      get_instance IMPORTING iv_object      TYPE trobj_name
-                             iv_object_type TYPE trobjtype
-                             iv_lang        TYPE sy-langu
-                   RETURNING VALUE(ro_result) TYPE REF TO lif_techdocu_repo_object
+    CLASS-METHODS:
+      get_instance IMPORTING iv_object        TYPE trobj_name
+                             iv_object_type   TYPE trobjtype
+                             iv_lang          TYPE sy-langu
+                   RETURNING VALUE(ro_result) TYPE REF TO lif_techdocu_repo_obj
                    RAISING   cx_sy_create_object_error.
 
     METHODS:
       constructor IMPORTING iv_object      TYPE trobj_name
                             iv_object_type TYPE trobjtype
                             iv_lang        TYPE sy-langu.
-
   PROTECTED SECTION.
     DATA mv_object      TYPE trobj_name.
     DATA mv_object_type TYPE trobjtype.
     DATA mv_lang        TYPE sy-langu.
+    DATA mo_metadata TYPE REF TO lcl_techdocu_repo_obj_metadata.
 
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_devc DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_devc DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_prog DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_prog DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_tran DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_tran DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_intf DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_intf DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_clas DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_clas DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_tabl DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_tabl DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_msag DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_msag DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_shlp DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_shlp DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_doma DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_doma DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_dtel DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_dtel DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_ttyp DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_ttyp DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_view DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_view DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_sfpi DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_sfpi DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_sfpf DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_sfpf DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_fugr DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_fugr DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_sxci DEFINITION INHERITING FROM lcl_techdocu_repo_object FINAL.
+CLASS lcl_techdocu_repo_obj_sxci DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_object~title REDEFINITION.
+    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
 ENDCLASS.

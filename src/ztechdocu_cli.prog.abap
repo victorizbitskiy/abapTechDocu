@@ -41,18 +41,14 @@ CLASS lcl_techdocu_scr_events IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD end_of_selection.
-
     go_repo->display( ).
-
   ENDMETHOD.
 
 ENDCLASS.
 
 CLASS lcl_techdocu_repo IMPLEMENTATION.
   METHOD constructor.
-
     ms_context = is_context.
-
   ENDMETHOD.
 
   METHOD select_treqs.
@@ -97,8 +93,8 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
       TABLES
         wt_object_text = lt_object_table.
 
-    APPEND LINES OF read_e071( ) TO lt_repo_data.
-    APPEND LINES OF read_tadir( ) TO lt_repo_data.
+    APPEND LINES OF repo_data_by_treqs( ) TO lt_repo_data.
+    APPEND LINES OF repo_data_by_package( ) TO lt_repo_data.
 
     SORT lt_repo_data ASCENDING.
 
@@ -108,8 +104,10 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
         ls_repo_data-obj_type_name = lt_object_table[ object = ls_repo_data-obj_type ]-text.
 
         TRY.
-            ls_repo_data-obj_title = read_repo_object_title( iv_object = ls_repo_data-obj_name
-                                                             iv_object_type = ls_repo_data-obj_type ).
+            DATA(ls_attributes) = read_repo_obj_metadata( iv_object = ls_repo_data-obj_name
+                                                          iv_object_type = ls_repo_data-obj_type )->get_attributes( ).
+
+            ls_repo_data-obj_title = ls_attributes-title.
 
           CATCH cx_sy_create_object_error INTO DATA(lo_e).
 
@@ -131,7 +129,7 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD read_e071.
+  METHOD repo_data_by_treqs.
 
     DATA(lt_treqs) = select_treqs( ).
 
@@ -150,7 +148,7 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD read_tadir.
+  METHOD repo_data_by_package.
 
     IF ms_context-devc_range IS NOT INITIAL.
 
@@ -187,12 +185,12 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD read_repo_object_title.
+  METHOD read_repo_obj_metadata.
 
-    DATA(lo_object) = lcl_techdocu_repo_object=>get_instance( iv_object = iv_object
-                                                              iv_object_type = iv_object_type
-                                                              iv_lang = ms_context-lang ).
-    rv_result = lo_object->title( ).
+    DATA(lo_repo_obj_object) = lcl_techdocu_repo_obj=>get_instance( iv_object = iv_object
+                                                                    iv_object_type = iv_object_type
+                                                                    iv_lang = ms_context-lang ).
+    ro_result = lo_repo_obj_object->read_metadata( )->get_metadata( ).
 
   ENDMETHOD.
 
@@ -305,7 +303,17 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object IMPLEMENTATION.
+CLASS lcl_techdocu_repo_obj_metadata IMPLEMENTATION.
+  METHOD set_attributes.
+    ms_attributes = is_attributes.
+  ENDMETHOD.
+
+  METHOD get_attributes.
+    rs_result = ms_attributes.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_repo_obj IMPLEMENTATION.
   METHOD constructor.
 
     mv_object = iv_object.
@@ -316,34 +324,44 @@ CLASS lcl_techdocu_repo_object IMPLEMENTATION.
 
   METHOD get_instance.
 
-    DATA(lv_type) = |LCL_TECHDOCU_REPO_OBJECT_{ iv_object_type }|.
+    DATA(lv_class_name) = |LCL_TECHDOCU_REPO_OBJECT_{ iv_object_type }|.
 
     CREATE OBJECT ro_result
-      TYPE (lv_type)
+      TYPE (lv_class_name)
       EXPORTING
-        iv_object = iv_object
+        iv_object      = iv_object
         iv_object_type = iv_object_type
-        iv_lang = iv_lang.
+        iv_lang        = iv_lang.
 
   ENDMETHOD.
 
-  METHOD lif_techdocu_repo_object~title.
-    rv_result = space.
+  METHOD lif_techdocu_repo_obj~read_metadata.
+
   ENDMETHOD.
 
-ENDCLASS.
-
-CLASS lcl_techdocu_repo_object_devc IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
-
-    SELECT SINGLE ctext FROM tdevct INTO @rv_result WHERE devclass = @mv_object
-                                                      AND spras = @mv_lang.
+  METHOD lif_techdocu_repo_obj~get_metadata.
+    ro_result = mo_metadata.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_prog IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_devc IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE ctext FROM tdevct INTO @ls_attributes-title WHERE devclass = @mv_object
+                                                                AND spras = @mv_lang.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_techdocu_repo_obj_prog IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
+
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
     DATA lv_result TYPE rs38m-repti.
 
     CALL FUNCTION 'PROGRAM_TITLE'
@@ -353,23 +371,31 @@ CLASS lcl_techdocu_repo_object_prog IMPLEMENTATION.
       IMPORTING
         title    = lv_result.
 
-    rv_result = lv_result.
+    ls_attributes-title = lv_result.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
 
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_tran IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_tran IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE ttext FROM tstct INTO @rv_result WHERE tcode = @mv_object
-                                                     AND sprsl = @mv_lang.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE ttext FROM tstct INTO @ls_attributes-title WHERE tcode = @mv_object
+                                                               AND sprsl = @mv_lang.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
 
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_intf IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_intf IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
     DATA ls_clskey TYPE seoclskey.
     DATA ls_vseointerf TYPE vseointerf.
 
@@ -387,15 +413,19 @@ CLASS lcl_techdocu_repo_object_intf IMPLEMENTATION.
         model_only   = 3
         OTHERS       = 4.
     IF sy-subrc = 0.
-      rv_result = ls_vseointerf-descript.
+      ls_attributes-title = ls_vseointerf-descript.
     ENDIF.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
 
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_clas IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_clas IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
     DATA ls_clskey TYPE seoclskey.
     DATA ls_vseoclass TYPE vseoclass.
 
@@ -413,106 +443,166 @@ CLASS lcl_techdocu_repo_object_clas IMPLEMENTATION.
         model_only   = 3
         OTHERS       = 4.
     IF sy-subrc = 0.
-      rv_result = ls_vseoclass-descript.
+      ls_attributes-title = ls_vseoclass-descript.
     ENDIF.
 
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_tabl IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_tabl IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE ddtext FROM dd02v INTO @rv_result WHERE tabname = @mv_object
-                                                      AND ddlanguage = @mv_lang.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE ddtext FROM dd02v INTO @ls_attributes-title WHERE tabname = @mv_object
+                                                                AND ddlanguage = @mv_lang.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_msag IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_msag IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE stext FROM t100a INTO @rv_result WHERE arbgb = @mv_object
-                                                     AND masterlang = @mv_lang.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE stext FROM t100a INTO @ls_attributes-title WHERE arbgb = @mv_object
+                                                               AND masterlang = @mv_lang.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_shlp IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_shlp IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE ddtext FROM dd30t INTO @rv_result WHERE shlpname = @mv_object
-                                                      AND ddlanguage = @mv_lang
-                                                      AND as4local = 'A'.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE ddtext FROM dd30t INTO @ls_attributes-title WHERE shlpname = @mv_object
+                                                                AND ddlanguage = @mv_lang
+                                                                AND as4local = 'A'.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_doma IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_doma IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE ddtext FROM dd01t INTO @rv_result WHERE domname = @mv_object
-                                                      AND ddlanguage = @mv_lang
-                                                      AND as4local = 'A'
-                                                      AND as4vers = @space.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE ddtext FROM dd01t INTO @ls_attributes-title WHERE domname = @mv_object
+                                                                AND ddlanguage = @mv_lang
+                                                                AND as4local = 'A'
+                                                                AND as4vers = @space.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_dtel IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_dtel IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE ddtext FROM dd04t INTO @rv_result WHERE rollname = @mv_object
-                                                      AND ddlanguage = @mv_lang
-                                                      AND as4local = 'A'
-                                                      AND as4vers = @space.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE ddtext FROM dd04t INTO @ls_attributes-title WHERE rollname = @mv_object
+                                                                AND ddlanguage = @mv_lang
+                                                                AND as4local = 'A'
+                                                                AND as4vers = @space.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_ttyp IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_ttyp IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
+*
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
 
-    SELECT SINGLE ddtext FROM dd40t INTO @rv_result WHERE typename = @mv_object
-                                                      AND ddlanguage = @mv_lang
-                                                      AND as4local = 'A'.
+    SELECT SINGLE ddtext FROM dd40t INTO @ls_attributes-title WHERE typename = @mv_object
+                                                                AND ddlanguage = @mv_lang
+                                                                AND as4local = 'A'.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_view IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_view IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE ddtext FROM dd25t INTO @rv_result WHERE ddlanguage = @mv_lang
-                                                      AND viewname = @mv_object
-                                                      AND as4local = 'A'
-                                                      AND as4vers = @space.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE ddtext FROM dd25t INTO @ls_attributes-title WHERE ddlanguage = @mv_lang
+                                                                AND viewname = @mv_object
+                                                                AND as4local = 'A'
+                                                                AND as4vers = @space.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_sfpi IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_sfpi IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE text INTO @rv_result FROM fpinterfacet WHERE name = @mv_object
-                                                           AND state = 'A'
-                                                           AND language = @mv_lang.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE text FROM fpinterfacet INTO @ls_attributes-title WHERE name = @mv_object
+                                                                     AND state = 'A'
+                                                                     AND language = @mv_lang.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_sfpf IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_sfpf IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE text INTO @rv_result FROM fpcontextt WHERE name = @mv_object
-                                                         AND state = 'A'
-                                                         AND language = @mv_lang.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE text FROM fpcontextt INTO @ls_attributes-title WHERE name = @mv_object
+                                                                   AND state = 'A'
+                                                                   AND language = @mv_lang.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_fugr IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_fugr IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE areat INTO @rv_result FROM tlibt WHERE spras = @mv_lang
-                                                     AND area = @mv_object.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE areat FROM tlibt INTO @ls_attributes-title WHERE spras = @mv_lang
+                                                               AND area = @mv_object.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_techdocu_repo_object_sxci IMPLEMENTATION.
-  METHOD lif_techdocu_repo_object~title.
+CLASS lcl_techdocu_repo_obj_sxci IMPLEMENTATION.
+  METHOD lif_techdocu_repo_obj~read_metadata.
 
-    SELECT SINGLE text INTO @rv_result FROM sxc_attrt WHERE imp_name = @mv_object
-                                                        AND sprsl = @mv_lang.
+    DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    SELECT SINGLE text FROM sxc_attrt INTO @ls_attributes-title WHERE imp_name = @mv_object
+                                                                  AND sprsl = @mv_lang.
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+
   ENDMETHOD.
 ENDCLASS.
