@@ -10,7 +10,7 @@ Translations:
 - [:ru: На русском языке](https://github.com/victorizbitskiy/abapTechDocu/blob/main/translations/ru/) 
 
 ## `abapTechDocu`
-A tool to help you create technical documentation
+A tool to help you create a technical documentation
 
 # Table of contents
 1. [What it is?](#what-it-is)
@@ -20,7 +20,7 @@ A tool to help you create technical documentation
 5. [Supported Object Type](supported-object-type)
 
 ## What it is?
-A tool for creating technical documentation
+A tool for creating a technical documentation
 
 ## What is this for
 Often, when creating technical documentation, it is required to indicate objects created or modified in the system. Doing it manually is a chore, so I wanted to find a way to automate this. I found a tool to help create documentation about <a href="https://github.com/victorizbitskiy/CUSTTOOL"> settings</a>, but did not find a tool that automates the search for created development objects. So I created it myself.
