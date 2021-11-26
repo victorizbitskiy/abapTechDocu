@@ -35,7 +35,7 @@ Just run the **`ztechdocu`** report and specify the transport requests or packag
 
 As a result, you will get a list of all relevant objects. Like this:
 
-![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_1.png)
+![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_alv.png)
 
 Then you can, for example, upload this data to a file.
 
