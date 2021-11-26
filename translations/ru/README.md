@@ -37,7 +37,7 @@
 
 В результате вы получите список всех релевантных объектов репозитория с описанием. Например, как здесь:
 
-![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_1.png)
+![result](https://github.com/victorizbitskiy/abapTechDocu/blob/main/docs/img/example_alv.png)
 
 Далее можно, например, выгрузить эти данные в файл.
 
