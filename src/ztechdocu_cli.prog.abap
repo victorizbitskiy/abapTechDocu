@@ -86,31 +86,34 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
   METHOD read_repo_data.
 
-    DATA lt_repo_data TYPE ty_t_repo_data.
+    DATA lt_main_repo_data TYPE ty_t_repo_data.
+    DATA ls_repo_data LIKE LINE OF mt_repo_data.
     DATA lt_object_table TYPE STANDARD TABLE OF ko100.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
         wt_object_text = lt_object_table.
 
-    APPEND LINES OF repo_data_by_treqs( ) TO lt_repo_data.
-    APPEND LINES OF repo_data_by_package( ) TO lt_repo_data.
+    APPEND LINES OF repo_data_by_treqs( ) TO lt_main_repo_data.
+    APPEND LINES OF repo_data_by_package( ) TO lt_main_repo_data.
 
-    SORT lt_repo_data ASCENDING.
+    SORT lt_main_repo_data ASCENDING.
 
-    LOOP AT lt_repo_data INTO DATA(ls_repo_data).
+    LOOP AT lt_main_repo_data INTO DATA(ls_main_repo_data).
 
-      IF is_treq_exist( ls_repo_data ).
-        ls_repo_data-obj_type_name = lt_object_table[ object = ls_repo_data-obj_type ]-text.
+      CLEAR ls_repo_data.
+
+      IF is_tr_obj_exist( ls_main_repo_data ).
+
+        ls_repo_data-pgmid         = ls_main_repo_data-pgmid.
+        ls_repo_data-obj_type      = ls_main_repo_data-obj_type.
+        ls_repo_data-obj_name      = ls_main_repo_data-obj_name.
+        ls_repo_data-obj_type_name = lt_object_table[ object = ls_main_repo_data-obj_type ]-text.
 
         TRY.
-            DATA(ls_attributes) = read_repo_obj_metadata( iv_object = ls_repo_data-obj_name
-                                                          iv_object_type = ls_repo_data-obj_type )->get_attributes( ).
+            DATA(ls_attributes) = read_repo_obj_metadata( iv_object = ls_main_repo_data-obj_name
+                                                          iv_object_type = ls_main_repo_data-obj_type )->get_attributes( ).
 
-            ls_repo_data-pgmid         = ls_repo_data-pgmid.
-            ls_repo_data-obj_type      = ls_repo_data-obj_type.
-            ls_repo_data-obj_type_name = ls_repo_data-obj_type_name.
-            ls_repo_data-obj_name      = ls_repo_data-obj_name.
             ls_repo_data-obj_title     = ls_attributes-title.
             ls_repo_data-cnam          = ls_attributes-cnam.
             ls_repo_data-cdat          = ls_attributes-cdat.
@@ -121,7 +124,7 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
             ls_repo_data-rowcolor = 'C311'.
             ls_repo_data-message_type = 'W'.
-            MESSAGE w002 WITH ls_repo_data-obj_type INTO ls_repo_data-message_text.
+            MESSAGE w002 WITH ls_main_repo_data-obj_type INTO ls_repo_data-message_text.
 
         ENDTRY.
 
@@ -173,7 +176,7 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD is_treq_exist.
+  METHOD is_tr_obj_exist.
 
     DATA lv_exist TYPE boole_d.
 
@@ -239,7 +242,7 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
     lt_fcat = get_field_catalog( ).
     ls_layout-sel_mode = 'A'.
     ls_layout-zebra = abap_true.
-    ls_layout-cwidth_opt = abap_true.
+*    ls_layout-cwidth_opt = abap_true.
     ls_layout-info_fname = 'ROWCOLOR'.
 
     mo_grid->set_table_for_first_display( EXPORTING is_layout       = ls_layout
@@ -265,45 +268,71 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
 
         CASE <ls_fcat>-fieldname.
           WHEN 'PGMID'.
+            <ls_fcat>-outputlen = 9.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Program ID'(002).
           WHEN 'OBJ_TYPE'.
+            <ls_fcat>-outputlen = 9.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Object type'(003).
           WHEN 'OBJ_TYPE_NAME'.
+            <ls_fcat>-outputlen = 20.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Object type name'(004).
           WHEN 'OBJ_NAME'.
+            <ls_fcat>-outputlen = 32.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Object name'(005).
           WHEN 'OBJ_TITLE'.
-            <ls_fcat>-outputlen = 12.
+            <ls_fcat>-outputlen = 25.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Object title'(006).
           WHEN 'MESSAGE_TYPE'.
-            <ls_fcat>-outputlen = 12.
+            <ls_fcat>-outputlen = 5.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Message type'(007).
           WHEN 'MESSAGE_TEXT'.
-            <ls_fcat>-outputlen = 20.
+            <ls_fcat>-outputlen = 25.
             <ls_fcat>-scrtext_s =
             <ls_fcat>-scrtext_m =
             <ls_fcat>-scrtext_l =
             <ls_fcat>-coltext = 'Message text'(008).
-          WHEN 'CNAM' OR 'CDAT' OR 'UNAME' OR 'UDAT'.
-            <ls_fcat>-tech = abap_true.
+          WHEN 'CNAM'.
+            <ls_fcat>-outputlen = 10.
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Created'(009).
+          WHEN 'CDAT'.
+            <ls_fcat>-outputlen = 10.
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Created On'(010).
+          WHEN 'UNAME'.
+            <ls_fcat>-outputlen = 10.
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Last Changed'(011).
+          WHEN 'UDAT'.
+            <ls_fcat>-outputlen = 10.
+            <ls_fcat>-scrtext_s =
+            <ls_fcat>-scrtext_m =
+            <ls_fcat>-scrtext_l =
+            <ls_fcat>-coltext = 'Changed On'(012).
           WHEN OTHERS.
         ENDCASE.
 
@@ -346,7 +375,7 @@ CLASS lcl_techdocu_repo_obj IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_techdocu_repo_obj~read_metadata.
-
+    RETURN.
   ENDMETHOD.
 
   METHOD lif_techdocu_repo_obj~get_metadata.
@@ -359,12 +388,33 @@ CLASS lcl_techdocu_repo_obj_devc IMPLEMENTATION.
 
     DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
 
-    SELECT SINGLE ctext FROM tdevct INTO @ls_attributes-title WHERE devclass = @mv_object
-                                                                AND spras = @mv_lang.
+    DATA(ls_prop) = properties( ).
+    ls_attributes-title = ls_prop-ctext.
+    ls_attributes-cnam = ls_prop-created_by.
+    ls_attributes-cdat = ls_prop-created_on.
+    ls_attributes-unam = ls_prop-changed_by.
+    ls_attributes-udat = ls_prop-changed_on.
 
     mo_metadata = NEW #( ).
     mo_metadata->set_attributes( ls_attributes ).
     ro_result = me.
+
+  ENDMETHOD.
+
+  METHOD properties.
+
+    SELECT SINGLE
+      c~created_by,
+      c~created_on,
+      c~changed_by,
+      c~changed_on,
+      t~ctext
+      FROM tdevc AS c
+      INNER JOIN tdevct AS t
+      ON c~devclass = t~devclass
+      INTO CORRESPONDING FIELDS OF @rs_result
+      WHERE c~devclass = @mv_object
+        AND t~spras = @mv_lang.
 
   ENDMETHOD.
 ENDCLASS.
@@ -373,6 +423,21 @@ CLASS lcl_techdocu_repo_obj_prog IMPLEMENTATION.
   METHOD lif_techdocu_repo_obj~read_metadata.
 
     DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    ls_attributes-title = title( ).
+    ls_attributes-cnam = read_trdir( )-cnam.
+    ls_attributes-cdat = read_trdir( )-cdat.
+    ls_attributes-unam = read_trdir( )-unam.
+    ls_attributes-udat = read_trdir( )-udat.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
+
+  ENDMETHOD.
+
+  METHOD title.
+
     DATA lv_result TYPE rs38m-repti.
 
     CALL FUNCTION 'PROGRAM_TITLE'
@@ -382,13 +447,23 @@ CLASS lcl_techdocu_repo_obj_prog IMPLEMENTATION.
       IMPORTING
         title    = lv_result.
 
-    ls_attributes-title = lv_result.
-
-    mo_metadata = NEW #( ).
-    mo_metadata->set_attributes( ls_attributes ).
-    ro_result = me.
+    rv_result = lv_result.
 
   ENDMETHOD.
+
+  METHOD read_trdir.
+
+    CALL FUNCTION 'READ_TRDIR'
+      EXPORTING
+        i_progname = CONV progname( mv_object )
+      IMPORTING
+        e_trdir    = rs_result
+      EXCEPTIONS
+        not_exists = 0
+        OTHERS     = 0.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_tran IMPLEMENTATION.
@@ -409,6 +484,22 @@ CLASS lcl_techdocu_repo_obj_intf IMPLEMENTATION.
   METHOD lif_techdocu_repo_obj~read_metadata.
 
     DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    DATA(ls_prop) = properties( ).
+    ls_attributes-title = ls_prop-descript.
+    ls_attributes-cnam = ls_prop-author.
+    ls_attributes-cdat = ls_prop-createdon.
+    ls_attributes-unam = ls_prop-changedby.
+    ls_attributes-udat = ls_prop-changedon.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
+
+  ENDMETHOD.
+
+  METHOD properties.
+
     DATA ls_clskey TYPE seoclskey.
     DATA ls_vseointerf TYPE vseointerf.
 
@@ -426,12 +517,8 @@ CLASS lcl_techdocu_repo_obj_intf IMPLEMENTATION.
         model_only   = 3
         OTHERS       = 4.
     IF sy-subrc = 0.
-      ls_attributes-title = ls_vseointerf-descript.
+      rs_result = ls_vseointerf.
     ENDIF.
-
-    mo_metadata = NEW #( ).
-    mo_metadata->set_attributes( ls_attributes ).
-    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.
@@ -440,6 +527,22 @@ CLASS lcl_techdocu_repo_obj_clas IMPLEMENTATION.
   METHOD lif_techdocu_repo_obj~read_metadata.
 
     DATA ls_attributes TYPE lcl_techdocu_repo_obj_metadata=>ty_attributes.
+
+    DATA(ls_prop) = properties( ).
+    ls_attributes-title = ls_prop-descript.
+    ls_attributes-cnam = ls_prop-author.
+    ls_attributes-cdat = ls_prop-createdon.
+    ls_attributes-unam = ls_prop-changedby.
+    ls_attributes-udat = ls_prop-changedon.
+
+    mo_metadata = NEW #( ).
+    mo_metadata->set_attributes( ls_attributes ).
+    ro_result = me.
+
+  ENDMETHOD.
+
+  METHOD properties.
+
     DATA ls_clskey TYPE seoclskey.
     DATA ls_vseoclass TYPE vseoclass.
 
@@ -457,12 +560,8 @@ CLASS lcl_techdocu_repo_obj_clas IMPLEMENTATION.
         model_only   = 3
         OTHERS       = 4.
     IF sy-subrc = 0.
-      ls_attributes-title = ls_vseoclass-descript.
+      rs_result = ls_vseoclass.
     ENDIF.
-
-    mo_metadata = NEW #( ).
-    mo_metadata->set_attributes( ls_attributes ).
-    ro_result = me.
 
   ENDMETHOD.
 ENDCLASS.

@@ -66,8 +66,8 @@ CLASS lcl_techdocu_repo DEFINITION FINAL.
 
       repo_data_by_package RETURNING VALUE(rt_result) TYPE ty_t_repo_data,
 
-      is_treq_exist IMPORTING is_repo_data     TYPE ty_repo_data
-                    RETURNING VALUE(rv_result) TYPE boole_d,
+      is_tr_obj_exist IMPORTING is_repo_data     TYPE ty_repo_data
+                      RETURNING VALUE(rv_result) TYPE boole_d,
 
       read_repo_obj_metadata IMPORTING iv_object        TYPE trobj_name
                                        iv_object_type   TYPE trobjtype
@@ -145,11 +145,24 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_devc DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
     METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
+
+  PRIVATE SECTION.
+    METHODS:
+      properties RETURNING VALUE(rs_result) TYPE tdevc.
+
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_prog DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
-    METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
+    METHODS:
+      lif_techdocu_repo_obj~read_metadata REDEFINITION.
+
+  PRIVATE SECTION.
+    METHODS:
+      title RETURNING VALUE(rv_result) TYPE string,
+
+      read_trdir RETURNING VALUE(rs_result) TYPE trdir.
+
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_tran DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
@@ -160,11 +173,19 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_intf DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
     METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
+
+  PRIVATE SECTION.
+    METHODS:
+      properties RETURNING VALUE(rs_result) TYPE vseointerf.
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_clas DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
   PUBLIC SECTION.
     METHODS lif_techdocu_repo_obj~read_metadata REDEFINITION.
+
+  PRIVATE SECTION.
+    METHODS:
+      properties RETURNING VALUE(rs_result) TYPE vseoclass.
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_tabl DEFINITION INHERITING FROM lcl_techdocu_repo_obj FINAL.
