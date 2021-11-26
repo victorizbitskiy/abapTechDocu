@@ -128,7 +128,7 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
             ls_repo_data-rowcolor = 'C311'.
             ls_repo_data-message_type = 'W'.
-            MESSAGE w002 WITH ls_main_repo_data-obj_type INTO ls_repo_data-message_text.
+            MESSAGE w002 WITH ls_main_repo_data-obj_type lo_e->get_text( ) INTO ls_repo_data-message_text.
 
         ENDTRY.
 
@@ -378,18 +378,19 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_devc IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE
+    SELECT
       t~ctext AS title,
       c~changed_by AS cnam,
       c~changed_on AS cdat,
       c~created_by AS unam,
-      c~created_on AS udat
+      c~created_on AS udat UP TO 1 ROWS
       FROM tdevc AS c
       INNER JOIN tdevct AS t
       ON c~devclass = t~devclass
       INTO CORRESPONDING FIELDS OF @rs_result
       WHERE c~devclass = @mv_object
         AND t~spras = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -431,18 +432,19 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_tran IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE
+    SELECT
       t~ttext AS title,
       c~author AS cnam,
       c~created_on AS udat
       FROM tadir AS c
       INNER JOIN tstct AS t
-      ON c~object = t~tcode
+      ON c~obj_name = t~tcode UP TO 1 ROWS
       INTO CORRESPONDING FIELDS OF @rs_result
-      WHERE pgmid = 'R3TR'
+      WHERE c~pgmid = 'R3TR'
         AND c~object = @mv_object_type
         AND c~obj_name = @mv_object
         AND t~sprsl = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -520,14 +522,15 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_tabl IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE
+    SELECT
       as4user AS unam,
       as4date AS udat,
-      ddtext AS title
+      ddtext AS title UP TO 1 ROWS
       FROM dd02v
       INTO CORRESPONDING FIELDS OF @rs_result
       WHERE tabname = @mv_object
         AND ddlanguage = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -535,15 +538,16 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_msag IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE
+    SELECT
       respuser AS cnam,
       lastuser AS unam,
-      ldate AS cdat,
-      stext AS title
+      ldate AS udat,
+      stext AS title UP TO 1 ROWS
       FROM t100a
       INTO CORRESPONDING FIELDS OF @rs_result
       WHERE arbgb = @mv_object
         AND masterlang = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -551,17 +555,18 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_shlp IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE
+    SELECT
       l~as4user AS cnam,
       l~as4date AS cdat,
-      t~ddtext AS title
+      t~ddtext AS title UP TO 1 ROWS
       FROM dd30l AS l
       INNER JOIN dd30t AS t
       ON l~shlpname = t~shlpname
       INTO CORRESPONDING FIELDS OF @rs_result
        WHERE l~shlpname = @mv_object
-         AND t~ddlanguage = @mv_lang
-         AND l~as4local = 'A'.
+         AND l~as4local = 'A'
+         AND t~ddlanguage = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -569,18 +574,19 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_doma IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE
+    SELECT
       t~ddtext AS title,
       l~as4user AS unam,
-      l~as4date AS udat
+      l~as4date AS udat UP TO 1 ROWS
       FROM dd01l AS l
       INNER JOIN dd01t AS t
       ON l~domname = t~domname
       INTO CORRESPONDING FIELDS OF @rs_result
       WHERE l~domname = @mv_object
-        AND t~ddlanguage = @mv_lang
         AND l~as4local = 'A'
-        AND l~as4vers = @space.
+        AND l~as4vers = @space
+        AND t~ddlanguage = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -588,19 +594,38 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_dtel IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE ddtext FROM dd04t INTO @rs_result-title WHERE rollname = @mv_object
-                                                                AND ddlanguage = @mv_lang
-                                                                AND as4local = 'A'
-                                                                AND as4vers = @space.
+    SELECT
+      t~ddtext AS title,
+      l~as4user AS unam,
+      l~as4date AS udat UP TO 1 ROWS
+      FROM dd04l AS l
+      INNER JOIN dd04t AS t
+      ON l~rollname = t~rollname
+      INTO CORRESPONDING FIELDS OF @rs_result
+      WHERE l~rollname = @mv_object
+        AND l~as4local = 'A'
+        AND l~as4vers = @space
+        AND t~ddlanguage = @mv_lang.
+    ENDSELECT.
+
   ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_ttyp IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE ddtext FROM dd40t INTO @rs_result-title  WHERE typename = @mv_object
-                                                                AND ddlanguage = @mv_lang
-                                                                AND as4local = 'A'.
+    SELECT
+     t~ddtext AS title,
+     l~as4user AS unam,
+     l~as4date AS udat UP TO 1 ROWS
+     FROM dd40l AS l
+     INNER JOIN dd40t AS t
+     ON l~typename = t~typename
+     INTO CORRESPONDING FIELDS OF @rs_result
+     WHERE l~typename = @mv_object
+       AND l~as4local = 'A'
+       AND t~ddlanguage = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -608,10 +633,19 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_view IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE ddtext FROM dd25t INTO @rs_result-title WHERE ddlanguage = @mv_lang
-                                                                AND viewname = @mv_object
-                                                                AND as4local = 'A'
-                                                                AND as4vers = @space.
+    SELECT
+      t~ddtext AS title,
+      l~as4user AS unam,
+      l~as4date AS udat UP TO 1 ROWS
+      FROM dd25l AS l
+      INNER JOIN dd25t AS t
+      ON l~viewname = t~viewname
+      INTO CORRESPONDING FIELDS OF @rs_result
+      WHERE l~viewname = @mv_object
+        AND l~as4local = 'A'
+        AND l~as4vers = @space
+        AND t~ddlanguage = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -619,9 +653,20 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_sfpi IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE text FROM fpinterfacet INTO @rs_result-title  WHERE name = @mv_object
-                                                                     AND state = 'A'
-                                                                     AND language = @mv_lang.
+    SELECT
+      t~text AS title,
+      l~firstuser AS cnam,
+      l~firstdate AS cdat,
+      l~lastuser AS unam,
+      l~lastdate AS udat UP TO 1 ROWS
+      FROM fpinterface AS l
+      INNER JOIN fpinterfacet AS t
+      ON l~name = t~name
+      INTO CORRESPONDING FIELDS OF @rs_result
+      WHERE l~name = @mv_object
+        AND l~state = 'A'
+        AND t~language = @mv_lang.
+    ENDSELECT.
 
   ENDMETHOD.
 ENDCLASS.
@@ -629,24 +674,57 @@ ENDCLASS.
 CLASS lcl_techdocu_repo_obj_sfpf IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE text FROM fpcontextt INTO @rs_result-title WHERE name = @mv_object
-                                                                   AND state = 'A'
-                                                                   AND language = @mv_lang.
+    SELECT
+      t~text AS title,
+      l~firstuser AS cnam,
+      l~firstdate AS cdat,
+      l~lastuser AS unam,
+      l~lastdate AS udat UP TO 1 ROWS
+      FROM fpcontext AS l
+      INNER JOIN fpcontextt AS t
+      ON l~name = t~name
+      INTO CORRESPONDING FIELDS OF @rs_result
+      WHERE l~name = @mv_object
+        AND l~state = 'A'
+        AND t~language = @mv_lang.
+    ENDSELECT.
+
   ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_fugr IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE areat FROM tlibt INTO @rs_result-title WHERE spras = @mv_lang
-                                                               AND area = @mv_object.
+    SELECT
+      t~areat AS title,
+      v~uname AS cnam UP TO 1 ROWS
+      FROM tlibv AS v
+      INNER JOIN tlibt AS t
+      ON v~area = t~area
+      INTO CORRESPONDING FIELDS OF @rs_result
+      WHERE v~area = @mv_object
+        AND t~spras = @mv_lang.
+    ENDSELECT.
+
   ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_techdocu_repo_obj_sxci IMPLEMENTATION.
   METHOD attributes.
 
-    SELECT SINGLE text FROM sxc_attrt INTO @rs_result-title WHERE imp_name = @mv_object
-                                                                  AND sprsl = @mv_lang.
+    SELECT
+      t~text AS title,
+      l~aname AS cnam,
+      l~adate AS cdat,
+      l~uname AS unam,
+      l~udate AS udat UP TO 1 ROWS
+      FROM sxc_attr AS l
+      INNER JOIN sxc_attrt AS t
+      ON l~imp_name = t~imp_name
+      INTO CORRESPONDING FIELDS OF @rs_result
+      WHERE l~imp_name = @mv_object
+        AND t~sprsl = @mv_lang.
+    ENDSELECT.
+
   ENDMETHOD.
 ENDCLASS.
