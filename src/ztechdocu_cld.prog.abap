@@ -67,12 +67,7 @@ CLASS lcl_techdocu_repo DEFINITION FINAL.
       repo_data_by_package RETURNING VALUE(rt_result) TYPE ty_t_repo_data,
 
       is_tr_obj_exist IMPORTING is_repo_data     TYPE ty_repo_data
-                      RETURNING VALUE(rv_result) TYPE boole_d,
-
-      read_repo_obj_metadata IMPORTING iv_object        TYPE trobj_name
-                                       iv_object_type   TYPE trobjtype
-                             RETURNING VALUE(ro_result) TYPE REF TO lcl_techdocu_repo_obj_metadata
-                             RAISING   cx_sy_create_object_error.
+                      RETURNING VALUE(rv_result) TYPE boole_d.
 
 ENDCLASS.
 

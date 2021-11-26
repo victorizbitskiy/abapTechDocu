@@ -105,20 +105,24 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
       IF is_tr_obj_exist( ls_main_repo_data ).
 
-        ls_repo_data-pgmid         = ls_main_repo_data-pgmid.
-        ls_repo_data-obj_type      = ls_main_repo_data-obj_type.
-        ls_repo_data-obj_name      = ls_main_repo_data-obj_name.
+        ls_repo_data-pgmid = ls_main_repo_data-pgmid.
+        ls_repo_data-obj_type = ls_main_repo_data-obj_type.
+        ls_repo_data-obj_name = ls_main_repo_data-obj_name.
         ls_repo_data-obj_type_name = lt_object_table[ object = ls_main_repo_data-obj_type ]-text.
 
         TRY.
-            DATA(ls_attributes) = read_repo_obj_metadata( iv_object = ls_main_repo_data-obj_name
-                                                          iv_object_type = ls_main_repo_data-obj_type )->get_attributes( ).
 
-            ls_repo_data-obj_title     = ls_attributes-title.
-            ls_repo_data-cnam          = ls_attributes-cnam.
-            ls_repo_data-cdat          = ls_attributes-cdat.
-            ls_repo_data-uname         = ls_attributes-unam.
-            ls_repo_data-udat          = ls_attributes-udat.
+            DATA(lo_repo_obj_object) = lcl_techdocu_repo_obj=>get_instance( iv_object = ls_main_repo_data-obj_name
+                                                                            iv_object_type = ls_main_repo_data-obj_type
+                                                                            iv_lang = ms_context-lang ).
+
+            DATA(ls_attributes) = lo_repo_obj_object->read_metadata( )->get_metadata( )->get_attributes( ).
+
+            ls_repo_data-obj_title = ls_attributes-title.
+            ls_repo_data-cnam = ls_attributes-cnam.
+            ls_repo_data-cdat = ls_attributes-cdat.
+            ls_repo_data-uname = ls_attributes-unam.
+            ls_repo_data-udat = ls_attributes-udat.
 
           CATCH cx_sy_create_object_error INTO DATA(lo_e).
 
@@ -196,15 +200,6 @@ CLASS lcl_techdocu_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD read_repo_obj_metadata.
-
-    DATA(lo_repo_obj_object) = lcl_techdocu_repo_obj=>get_instance( iv_object = iv_object
-                                                                    iv_object_type = iv_object_type
-                                                                    iv_lang = ms_context-lang ).
-    ro_result = lo_repo_obj_object->read_metadata( )->get_metadata( ).
-
-  ENDMETHOD.
-
   METHOD lif_techdocu_repo~read.
 
     read_repo_data( ).
@@ -242,7 +237,6 @@ CLASS lcl_techdocu_alv IMPLEMENTATION.
     lt_fcat = get_field_catalog( ).
     ls_layout-sel_mode = 'A'.
     ls_layout-zebra = abap_true.
-*    ls_layout-cwidth_opt = abap_true.
     ls_layout-info_fname = 'ROWCOLOR'.
 
     mo_grid->set_table_for_first_display( EXPORTING is_layout       = ls_layout
