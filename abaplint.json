@@ -199,7 +199,7 @@
       "try": true,
       "while": true,
       "case": true,
-      "select": true,
+      "select": false,
       "do": true,
       "at": true
     },
